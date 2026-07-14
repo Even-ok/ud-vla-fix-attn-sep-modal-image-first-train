@@ -5,9 +5,10 @@ from tqdm import tqdm
 import numpy as np
 import sys
 import argparse
+import json
 # Project-specific paths
-PROJECT_ROOT = "/data/user/wsong890/user68/project/"
-sys.path.append(f"{PROJECT_ROOT}/UniVLA")
+PROJECT_ROOT = "/data32/lyw/projects"
+sys.path.append(f"{PROJECT_ROOT}/ud-vla-fix-attn-sep-modal-image-first-train")
 
 # Import normalization utility
 from train.dataset.normalize_pi0 import RunningStats, save
@@ -71,20 +72,27 @@ def main(dataset_path, output_path, normalizer_path, output_filename):
         raise ValueError("No valid scenes found. Check your dataset path.")
 
     # === Normalize actions ===
-    normalizer = RunningStats()
-    action_data = np.concatenate([scene["action"] for scene in result_file])
-    normalizer.update(action_data)
-    stats = normalizer.get_statistics()
+    # normalizer = RunningStats()
+    # action_data = np.concatenate([scene["action"] for scene in result_file])
+    # normalizer.update(action_data)
+    # stats = normalizer.get_statistics()
 
-    print("Mean:", stats.mean)
-    print("Std:", stats.std)
-    print("Q01:", stats.q01)
-    print("Q99:", stats.q99)
+    # print("Mean:", stats.mean)
+    # print("Std:", stats.std)
+    # print("Q01:", stats.q01)
+    # print("Q99:", stats.q99)
 
+    # for scene in result_file:
+    #     action = scene["action"]
+    #     # Normalize to [-1, 1] using Q01 and Q99 as bounds
+    #     normalized = 2 * (action - stats.q01) / (stats.q99 - stats.q01 + 1e-8) - 1
+    #     scene["action"] = np.clip(normalized, -1, 1)
+
+    stats = json.load(open("/data32/lyw/projects/ud-vla-fix-attn-sep-modal-image-first-train/configs/normalizer_libero/norm_stats.json"))["norm_stats"]["libero"]
     for scene in result_file:
         action = scene["action"]
         # Normalize to [-1, 1] using Q01 and Q99 as bounds
-        normalized = 2 * (action - stats.q01) / (stats.q99 - stats.q01 + 1e-8) - 1
+        normalized = 2 * (action - np.array(stats["q01"])) / (np.array(stats["q99"]) - np.array(stats["q01"]) + 1e-8) - 1
         scene["action"] = np.clip(normalized, -1, 1)
 
     # === Save normalized dataset ===
@@ -93,9 +101,10 @@ def main(dataset_path, output_path, normalizer_path, output_filename):
         pickle.dump(result_file, f)
     print(f"Saved normalized data to {output_file}")
 
+
     # === Save normalization statistics ===
-    save(normalizer_path, {"libero": stats})
-    print(f"Saved normalizer statistics to {normalizer_path}")
+    # save(normalizer_path, {"libero": stats})
+    # print(f"Saved normalizer statistics to {normalizer_path}")
 
 
 if __name__ == "__main__":

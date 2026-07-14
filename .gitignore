@@ -5,9 +5,7 @@ __pycache__/
 wandb/
 reference/RoboVLMs/calvin/
 logs/
-pretrain/
 processed_data/
-pretrain
 processed_data
 .claude/
 .vscode/
