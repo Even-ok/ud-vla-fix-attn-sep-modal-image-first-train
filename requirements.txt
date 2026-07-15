@@ -16,4 +16,4 @@ tiktoken==0.6.0
 # UI and Utilities
 pillow
 gradio==4.44.0
-numpydantic==1.6.8
+numpydantic==1.8.0
