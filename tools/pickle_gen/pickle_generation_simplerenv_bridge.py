@@ -88,17 +88,18 @@ def extract_reasoning_list_from_episode(raw_episode):
 
 
 # Project-specific imports
-sys.path.append("/data/user/wsong890/user68/project/UniVLA")
+sys.path.append("/data32/lyw/projects/ud-vla-train_simplerEnv/ud-vla-fix-attn-sep-modal-image-first-train")
 from train.dataset.normalize_pi0 import RunningStats, save, load
 
 # ======= Path and config =======
-dataset_path = "/share/user/iperror/data/univla/processed_data"
-output_path = "/share/user/iperror/data/univla/processed_data/meta"
-normalizer_path = "/data/user/wsong890/user68/project/UniVLA/configs/normalizer_bridge_tmp"
+PROJECT_ROOT = "."
+dataset_path = os.path.join(PROJECT_ROOT, "processed_data")
+output_path = os.path.join(PROJECT_ROOT, "processed_data", "meta")
+normalizer_path = os.path.join(PROJECT_ROOT, "configs", "normalizer_bridge_lyw")
 os.makedirs(normalizer_path, exist_ok=True)
 
-language_dir = f"{dataset_path}/bridge"
-vq_dir = "/share/user/iperror/data/univla/processed_data/bridge_orig_codes_256"
+language_dir = os.path.join(dataset_path, "bridge_new")
+vq_dir = os.path.join(dataset_path, "bridge_orig_codes_200_new")
 interval = 1
 frames = 10
 with_cot = False
@@ -166,7 +167,7 @@ for scene in result_file:
     scene["action"] = np.clip(normalized, -1, 1)
 
 # ======= Save final data =======
-output_file = osp.join(output_path, "simplerenv_bridge_trainval.pkl")
+output_file = osp.join(output_path, "simplerenv_bridge_trainval_new_0831.pkl")
 with open(output_file, "wb") as f:
     pickle.dump(result_file, f)
 

@@ -2016,7 +2016,7 @@ class Emu3MoE(Emu3PreTrainedModel):
         # Load allowed token IDs for modality-aware loss computation
         last_token_id = 151642
         action_list = list(range(last_token_id - 1024, last_token_id + 1)) + [151845]  # eoa: 151845
-        image_list = list(range(151854, 184622)) + [151851, config.eof_token_id] + [16, 9, 15, 17, 20]  # img_token_id: 151851, eof_token_id: 151847
+        image_list = list(range(151854, 184622)) + [151851, config.eof_token_id] + [9, 15, 16, 17, 18, 19, 20, 21]  # img_token_id: 151851, eof_token_id: 151847
         # Precompute boolean lookup tensors for O(1) per-token modality check
         max_token_id = config.vocab_size
         action_mask = torch.zeros(max_token_id, dtype=torch.bool)

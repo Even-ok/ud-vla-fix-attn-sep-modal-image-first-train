@@ -11,3 +11,5 @@ processed_data
 .vscode/
 */_pycache/
 reference/RoboVLMs/cache/
+pretrain/
+pretrain
