@@ -5,12 +5,12 @@ MASTER_ADDR=${MASTER_ADDR:-127.0.0.1}
 MASTER_PORT=${MASTER_PORT:-24889}
 NGPUS=4
 
-DATAPATH='/data32/lyw/projects/ud-vla-train_simplerEnv/ud-vla-fix-attn-sep-modal-image-first-train/processed_data/meta/simplerenv_bridge_trainval_new_0831.pkl'
-ACTION_TOKENIZER_PATH="/data32/lyw/projects/ud-vla-train_simplerEnv/ud-vla-fix-attn-sep-modal-image-first-train/pretrain/fast_bridge_a5_s50_norm_ours_0826new"
+DATAPATH='./processed_data/meta/simplerenv_bridge_trainval_200pix.pkl'
+ACTION_TOKENIZER_PATH="./ori_pretrain/fast_bridge_a5_s50_norm_ours_0826new"
 EXP_NAME="UNIVLA_SIMPLERENV_BRIDGE_VIDEO_40k_a5_0831"
 
 export PYTHONPATH=$(pwd)
-export CUDA_VISIBLE_DEVICES=4,5,6,7
+export CUDA_VISIBLE_DEVICES=0,1,2,3
 
 torchrun \
     --master_addr=${MASTER_ADDR} \
@@ -19,8 +19,8 @@ torchrun \
     --nnodes=1 \
     --node_rank=${RANK} \
     train/train_moe.py \
-    --model_name_or_path /data32/lyw/pretrained_models/WORLD_MODEL_POSTTRAIN \
-    --model_config_path /data32/lyw/projects/ud-vla-train_simplerEnv/ud-vla-fix-attn-sep-modal-image-first-train/configs/moe_fast_video.json \
+    --model_name_or_path ./pretrained_models/WORLD_MODEL_POSTTRAIN \
+    --model_config_path ./configs/moe_fast_video.json \
     --deepspeed scripts/sft/zero3.json \
     --output_dir "logs/"${EXP_NAME} \
     --learning_rate 8e-5 \
@@ -38,14 +38,14 @@ torchrun \
     --dataloader_num_workers 16 \
     --lr_scheduler_type "cosine_with_min_lr" \
     --warmup_steps 500 \
-    --per_device_train_batch_size 4 \
+    --per_device_train_batch_size 6 \
     --frames 2 \
     --action_frames 5 \
     --max_position_embeddings 1550 \
     --seed 42 \
     --logging_steps 20 \
     --gradient_checkpointing True \
-    --gradient_accumulation_steps 6 \
+    --gradient_accumulation_steps 4 \
     --save_strategy steps \
     --save_steps 4000 \
     --eval_strategy no \

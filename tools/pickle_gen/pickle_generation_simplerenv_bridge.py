@@ -95,11 +95,11 @@ from train.dataset.normalize_pi0 import RunningStats, save, load
 PROJECT_ROOT = "."
 dataset_path = os.path.join(PROJECT_ROOT, "processed_data")
 output_path = os.path.join(PROJECT_ROOT, "processed_data", "meta")
-normalizer_path = os.path.join(PROJECT_ROOT, "configs", "normalizer_bridge_lyw")
+normalizer_path = os.path.join(PROJECT_ROOT, "configs", "normalizer_bridge_lyw_256pix")
 os.makedirs(normalizer_path, exist_ok=True)
 
 language_dir = os.path.join(dataset_path, "bridge_new")
-vq_dir = os.path.join(dataset_path, "bridge_orig_codes_200_new")
+vq_dir = os.path.join(dataset_path, "bridge_orig_codes_256_new")
 interval = 1
 frames = 10
 with_cot = False
@@ -167,7 +167,7 @@ for scene in result_file:
     scene["action"] = np.clip(normalized, -1, 1)
 
 # ======= Save final data =======
-output_file = osp.join(output_path, "simplerenv_bridge_trainval_new_0831.pkl")
+output_file = osp.join(output_path, "simplerenv_bridge_trainval_256pix.pkl")
 with open(output_file, "wb") as f:
     pickle.dump(result_file, f)
 
