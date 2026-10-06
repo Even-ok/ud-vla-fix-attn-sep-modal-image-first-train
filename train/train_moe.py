@@ -6,6 +6,7 @@ import time
 import logging
 from dataclasses import dataclass, field
 from typing import Optional, List
+from uuid import uuid4
 import pathlib
 import transformers as tf
 from datasets import Emu3SFTDataset
@@ -25,6 +26,11 @@ class RobustDeepSpeedTrainer(tf.Trainer):
     Only model weights and scheduler state are saved.
     """
     _LOCAL_DS_CACHE = "/root/udvla_ckpt"
+    # Temp dir on a real (non-symlinked) path. Writing the big safetensors shards
+    # directly into the final output dir can fail with "Device or resource busy
+    # (os error 16)", so every save first goes here, then is copied into the final
+    # dir and the temp copy is deleted (see _save).
+    _TEMP_SAVE_ROOT = os.environ.get("UDVLA_TEMP_SAVE_ROOT", "/share/personal/liangyiwen/tmp")
     
     def log(self, logs: dict) -> None:
         """
@@ -109,6 +115,66 @@ class RobustDeepSpeedTrainer(tf.Trainer):
 
     def _save_optimizer_and_scheduler(self, output_dir):
         logger.info("[DEEPSPEED SAVE] Skipping optimizer/zero state save")
+
+    def _save(self, output_dir=None, state_dict=None):
+        """
+        Override to route model saves through _TEMP_SAVE_ROOT:
+        1. save the full model (shards + config + tokenizer + training_args) into a
+           unique temp dir under _TEMP_SAVE_ROOT
+        2. copy every file into the real output dir (size-verified, atomic per file)
+        3. delete the temp copy
+
+        Only called on the main process (rank0), like the parent _save.
+        """
+        final_dir = output_dir if output_dir is not None else self.args.output_dir
+
+        tmp_dir = os.path.join(
+            self._TEMP_SAVE_ROOT,
+            f"{os.path.basename(final_dir.rstrip(os.sep))}.tmp_{os.getpid()}_{uuid4().hex[:8]}",
+        )
+        os.makedirs(tmp_dir, exist_ok=True)
+        free_gb = shutil.disk_usage(tmp_dir).free / 2**30
+        print(f"[SAFE SAVE] Saving checkpoint to temp dir: {tmp_dir} (free: {free_gb:.1f} GiB)")
+        if free_gb < 50:
+            print(f"[SAFE SAVE] WARNING: Less than 50 GiB free in {self._TEMP_SAVE_ROOT}, save may fail")
+
+        try:
+            # 1) Save model shards etc. into the temp dir
+            super()._save(tmp_dir, state_dict=state_dict)
+
+            # 2) Copy into the final dir, one file at a time
+            os.makedirs(final_dir, exist_ok=True)
+            for name in sorted(os.listdir(tmp_dir)):
+                src = os.path.join(tmp_dir, name)
+                if not os.path.isfile(src):
+                    continue
+                self._copy_file_checked(src, os.path.join(final_dir, name))
+            print(f"[SAFE SAVE] All checkpoint files copied into {final_dir}")
+        finally:
+            # 3) Delete the temp copy
+            shutil.rmtree(tmp_dir, ignore_errors=True)
+
+    @staticmethod
+    def _copy_file_checked(src, dst):
+        """
+        Copy src -> dst atomically (write to a .copying_ temp name, then rename) and
+        verify the copied size matches, so a partial copy never looks like a valid file.
+        """
+        tmp_dst = f"{dst}.copying_{os.getpid()}"
+        try:
+            t0 = time.time()
+            shutil.copyfile(src, tmp_dst)
+            if os.path.getsize(src) != os.path.getsize(tmp_dst):
+                raise IOError(f"size mismatch after copy: {src} -> {tmp_dst}")
+            os.replace(tmp_dst, dst)
+            print(
+                f"[SAFE SAVE] Copied {os.path.basename(dst)}: "
+                f"{os.path.getsize(dst) / 2**30:.2f} GiB in {time.time() - t0:.1f}s"
+            )
+        except BaseException:
+            if os.path.exists(tmp_dst):
+                os.remove(tmp_dst)
+            raise
 
 
 class WeightedSamplerTrainer(RobustDeepSpeedTrainer):

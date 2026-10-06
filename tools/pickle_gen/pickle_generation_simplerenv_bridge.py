@@ -88,7 +88,7 @@ def extract_reasoning_list_from_episode(raw_episode):
 
 
 # Project-specific imports
-sys.path.append("/data32/lyw/projects/ud-vla-train_simplerEnv/ud-vla-fix-attn-sep-modal-image-first-train")
+sys.path.append("/share/personal/liangyiwen/code/simpler_train/ud-vla-fix-attn-sep-modal-image-first-train")
 from train.dataset.normalize_pi0 import RunningStats, save, load
 
 # ======= Path and config =======

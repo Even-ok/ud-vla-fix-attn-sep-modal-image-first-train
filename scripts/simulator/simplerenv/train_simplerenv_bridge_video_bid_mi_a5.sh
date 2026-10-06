@@ -7,7 +7,7 @@ NGPUS=4
 
 DATAPATH='./processed_data/meta/simplerenv_bridge_trainval_200pix.pkl'
 ACTION_TOKENIZER_PATH="./ori_pretrain/fast_bridge_a5_s50_norm_ours_0826new"
-EXP_NAME="UNIVLA_SIMPLERENV_BRIDGE_VIDEO_40k_a5_0831"
+EXP_NAME="UNIVLA_SIMPLERENV_BRIDGE_VIDEO_40k_a5_1004_save_4k"
 
 export PYTHONPATH=$(pwd)
 export CUDA_VISIBLE_DEVICES=0,1,2,3
@@ -38,7 +38,7 @@ torchrun \
     --dataloader_num_workers 16 \
     --lr_scheduler_type "cosine_with_min_lr" \
     --warmup_steps 500 \
-    --per_device_train_batch_size 6 \
+    --per_device_train_batch_size 4 \
     --frames 2 \
     --action_frames 5 \
     --max_position_embeddings 1550 \
@@ -63,4 +63,4 @@ torchrun \
     --max_action_len 40 \
     --fixbe True \
     --report_to wandb \
-    > ./logs/simplerenv/train/train_simplerenv_bridge_video_with_i_ia_mi_a5_0831_fixbe.log 2>&1
+    > ./logs/simplerenv/train/train_simplerenv_bridge_video_with_i_ia_mi_a5_1004_fixbe_save_4k.log 2>&1

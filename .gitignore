@@ -13,3 +13,5 @@ processed_data
 reference/RoboVLMs/cache/
 pretrain/
 pretrain
+pretrained_models/
+logs
